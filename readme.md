@@ -1,4 +1,4 @@
-# NYC Train Sign using Raspberry Pi with LED Matrix
+# MTA Train Sign built with Raspberry Pi + LED Matrix
 
 
 * An Express.js server which parses current train data from mta-gtfs and provides an API for easy display of data
