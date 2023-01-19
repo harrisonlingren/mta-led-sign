@@ -1,8 +1,9 @@
 // MTA setup
-const Mta = require('mta-gtfs')
+require('dotenv').config()
+const Mta = require('mta-gtfs-jl')
 const mta = new Mta({
-  key: '<YOUR_MTA_API_KEY>',
-  feed_id: 1
+  key: process.env.API_KEY,
+  feed_id: process.env.FEED_ID
 })
 
 // Express setup
@@ -53,20 +54,34 @@ router.route('/schedule')
 
 router.route('/schedule/:id')
 	.get(async (req, res ) => {
-    const result = await mta.schedule(req.params.id)
-    res.send(result.schedule[req.params.id])
+    try {
+      const result = await mta.schedule(req.params.id, process.env.FEED_ID)
+      if (result.schedule) {
+        res.send(result.schedule[req.params.id])
+      } else {
+        throw new Error("Cound not fetch schedule for " + req.params.id);
+      }
+    } catch (error) {
+      console.log(error);
+      res.sendStatus(502);
+    }
   })
 
 
 router.route('/schedule/:id/:trainName/:direction')
   .get(async (req, res ) => {
-    const result = await mta.schedule(req.params.id)
-    const direction = req.params.direction
-    let filteredResult = removeFromTree(result.schedule[req.params.id], req.params.trainName)
-    filteredResult[direction].forEach(arrivalInfo => {
-      arrivalInfo.relativeTime = timeToRelative(arrivalInfo.arrivalTime)
-    })
-    res.send(filteredResult[direction])
+    try {
+      const result = await mta.schedule(req.params.id, process.env.FEED_ID)
+      const direction = req.params.direction
+      let filteredResult = removeFromTree(result.schedule[req.params.id], req.params.trainName)
+      filteredResult[direction].forEach(arrivalInfo => {
+        arrivalInfo.relativeTime = timeToRelative(arrivalInfo.arrivalTime)
+      })
+      res.send(filteredResult[direction])
+    } catch (error) {
+      console.log(error);
+      res.sendStatus(502);
+    }
   })
 
 
