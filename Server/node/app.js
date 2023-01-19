@@ -60,13 +60,10 @@ router.route('/schedule/:id')
         res.send(result.schedule[req.params.id])
       } else {
         throw new Error("Cound not fetch schedule for " + req.params.id);
-        // console.log("Cound not fetch schedule for: ", req.params.id);
-        console.log(result);
-        res.sendStatus(404);
       }
     } catch (error) {
       console.log(error);
-      res.sendStatus(500);
+      res.sendStatus(502);
     }
   })
 
@@ -83,7 +80,7 @@ router.route('/schedule/:id/:trainName/:direction')
       res.send(filteredResult[direction])
     } catch (error) {
       console.log(error);
-      res.sendStatus(500);
+      res.sendStatus(502);
     }
   })
 
