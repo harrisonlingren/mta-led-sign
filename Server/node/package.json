@@ -19,7 +19,8 @@
   "author": "Maxx Scholten",
   "license": "MIT",
   "dependencies": {
+    "dotenv": "^16.0.3",
     "express": "^4.17.1",
-    "mta-gtfs": "^1.1.0"
+    "mta-gtfs-jl": "^1.2.4"
   }
 }
