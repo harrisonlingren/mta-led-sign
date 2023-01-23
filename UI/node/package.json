@@ -25,9 +25,8 @@
   "author": "Maxx Scholten",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.19.0",
-    "easybotics-rpi-rgb-led-matrix": "^0.2.6",
+    "axios": "^1.2.3",
     "nan": "^2.12.1",
-    "node-gyp": "^3.8.0"
+    "node-gyp": "^9.3.1"
   }
 }
