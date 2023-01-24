@@ -10,8 +10,8 @@ import {
       ...LedMatrix.defaultMatrixOptions(),
       rows: 32,
       cols: 64,
-      chainLength: 2,
-      hardwareMapping: GpioMapping.AdafruitHatPwm,
+      chainLength: 1,
+      hardwareMapping: GpioMapping.AdafruitHat,
       pixelMapperConfig: LedMatrixUtils.encodeMappers({
         type: PixelMapperType.U,
       }),
@@ -19,6 +19,7 @@ import {
     {
       ...LedMatrix.defaultRuntimeOptions(),
       gpioSlowdown: 1,
+      dropPrivileges: 1,
     }
   );
   
