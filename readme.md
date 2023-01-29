@@ -144,7 +144,7 @@ secrets = {
     
     # update this to the IP:Port or host domain 
     # that is running your API server
-    'mta_api_url': '192.168.86.32:8080'
+    'mta_api_url': '<SERVER_URL_OR_IP:PORT>'
 }
 ```
 
