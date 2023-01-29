@@ -5,7 +5,7 @@
 
 ## Requirements
 * MTA API Key
-  * https://datamine.mta.info/
+  * https://api.mta.info/
 * Adafruit [Matrix Portal](https://learn.adafruit.com/adafruit-matrixportal-m4)
   * https://www.adafruit.com/product/4745
 * 5V 4A power supply (to power LED matrix + portal)
