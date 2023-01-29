@@ -30,7 +30,7 @@ It might even come with multiple data cables in the event that you want to bridg
 ### Power cable
 Connect the forked ends of the power cable to the screw standoffs on the Matrix Portal, using the included screws. Attach the other end to the 4-pin power connector (make sure to connect the right side for 5V & ground).
 
-![Backside of display with Raspberry Pi & RGB Matrix HAT](https://cdn-learn.adafruit.com/assets/assets/000/095/023/original/led_matrices_4745-12.jpg?1600966452)
+![Backside of display with Matrix Portal](https://cdn-learn.adafruit.com/assets/assets/000/095/023/original/led_matrices_4745-12.jpg?1600966452)
 
 # Software
 This project is split in two parts: 
@@ -65,7 +65,7 @@ This project is split in two parts:
 
 ## Getting Started
 1. Sign up for an account and generate an API key from the MTA Real-Time Data Feeds website: https://api.mta.info
-2. Set up any dependencies on the host machine you'll use for the API. A raspberry pi at home works great, or you could also set up on a cloud VPS or managed service that can run node.js.
+2. Set up any dependencies on the host machine you'll use for the API. A Raspberry Pi at home works great, or you could also set up on a cloud VPS or managed service that can run node.js.
 
 ## Installing
 Install dependencies:
@@ -116,11 +116,11 @@ $ sudo node app.js
 Get the list of subway stations and find yours. Make note/write down of the `stop_id` associated to your subway station:
 ```bash
 # In an internet browser, go to the below address, or curl from a console:
-# From your Raspbery Pi:
+# From your server host machine:
 $ curl localhost:8080/api/station
 
-# From a computer on the same wifi network as the Raspberry Pi
-$ curl http://raspberrypi.local:8080/api/station
+# From a separate computer on the same Wi-Fi network:
+$ curl <SERVER_IP>:8080/api/station
 ```
 
 
