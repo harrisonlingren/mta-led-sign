@@ -84,7 +84,7 @@ In `Server/node`, create a file called `.env` and supply the below info:
 `API_KEY`: Your MTA access token  
 `FEED_ID`: The ID of the feed to check for train routes. This should be one of the following based on your local station:
 
-```json
+```js
 {
   '123456': undefined,
   'ACE': '-ace',
