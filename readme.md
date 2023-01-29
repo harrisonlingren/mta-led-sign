@@ -133,7 +133,12 @@ secrets = {
     'password' : '<YOUR_WIFI_PASSWORD>',
     
     # http://worldtimeapi.org/timezones
-    'timezone' : "America/New_York", 
+    'timezone' : 'America/New_York', 
+
+    # required for some dependency libraries,
+    # register for free at io.adafruit.com
+    'aio_username': '<YOUR_ADAFRUIT_IO_USERNAME>',
+    'aio_key': '<YOUR_ADAFRUIT_IO_KEY>',
     
     # find this ID from your API endpoint: 
     # localhost:8080/api/station
