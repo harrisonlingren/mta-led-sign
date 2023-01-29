@@ -1,9 +1,7 @@
-# MTA Train Sign built with Raspberry Pi + LED Matrix
-
+# MTA Train Sign built with LED Matrix + Adafruit Matrix Portal
 
 * An Express.js server which parses current train data from mta-gtfs and provides an API for easy display of data
 * A CircuitPython app to handle display of selected NYC subway station data on a 64x32 LED Matrix via the Adafruit Matrix Portal microcontroller.
-
 
 ## Requirements
 * MTA API Key
