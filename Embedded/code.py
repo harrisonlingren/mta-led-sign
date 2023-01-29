@@ -79,5 +79,6 @@ while True:
 
         except RuntimeError as e:
             print("Some error occured, retrying! -", e)
+            continue
 
     
