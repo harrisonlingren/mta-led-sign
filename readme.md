@@ -8,11 +8,10 @@
   * https://api.mta.info/
 * Adafruit [Matrix Portal](https://learn.adafruit.com/adafruit-matrixportal-m4)
   * https://www.adafruit.com/product/4745
-* 5V 4A power supply (to power LED matrix + portal)
-  * https://www.adafruit.com/product/1466
+* USB-C 5V 4A power supply (to power LED matrix + portal)
+  * Something like this: https://amzn.com/dp/B091DS2M8X
 * 5V Power Cable
-  * In case the LED matrix didn't come with it, pick this up too
-  * https://www.adafruit.com/product/4767 
+  * In case the LED matrix didn't come with it, pick this up too: https://www.adafruit.com/product/4767 
 * 64x32 LED RGB Matrix
   * Example: https://www.adafruit.com/product/2277
   * Any 64x32 panel works as long as it's compatible with the HUB75 standard
