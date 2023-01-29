@@ -41,8 +41,6 @@ api_url = secrets['mta_api_url']
 station = secrets['mta_station']
 direction = secrets['mta_train_direction']
 request_url = "http://{}/api/schedule/{}".format(api_url, station)
-# debug
-# print("req: {}".format(request_url))
 
 matrixportal.add_text(
     text_position=(0, int(matrixportal.graphics.display.height * 0.25) - 2),
@@ -70,14 +68,14 @@ while True:
         try:
             # print("fetching from API...")
             schedule_response = matrixportal.fetch(request_url)
-            schedule_south = json.loads(schedule_response)[direction]
+            schedule_directional = json.loads(schedule_response)[direction]
             next_train_index = 0
 
-            if not get_train_info( schedule_south[0] )['dep'] > 0:
+            if not get_train_info( schedule_directional[0] )['dep'] > 0:
                 next_train_index = 1
 
-            train1 = get_train_info( schedule_south[next_train_index] )
-            train2 = get_train_info( schedule_south[next_train_index + 1] )
+            train1 = get_train_info( schedule_directional[next_train_index] )
+            train2 = get_train_info( schedule_directional[next_train_index + 1] )
 
             # debug
             # print("Next train: {}, direction: {}, leaving in: {}".format(train1['route'], train1['dir'], train1['dep']))
