@@ -71,19 +71,42 @@ router.route('/schedule/:id')
 router.route('/schedule/:id/:trainName/:direction')
   .get(async (req, res ) => {
     try {
-      const result = await mta.schedule(req.params.id, process.env.FEED_ID)
       const direction = req.params.direction
-      let filteredResult = removeFromTree(result.schedule[req.params.id], req.params.trainName)
-      filteredResult[direction].forEach(arrivalInfo => {
-        arrivalInfo.relativeTime = timeToRelative(arrivalInfo.arrivalTime)
-      })
-      res.send(filteredResult[direction])
+      if (direction == "N" || direction == "S") {
+        const result = await mta.schedule(req.params.id, process.env.FEED_ID)
+        let filteredResult = removeFromTree(result.schedule[req.params.id], req.params.trainName)
+        filteredResult[direction].forEach(arrivalInfo => {
+          arrivalInfo.relativeTime = timeToRelative(arrivalInfo.arrivalTime)
+        })
+        res.send(filteredResult[direction])
+      } else {
+        res.sendStatus(400);
+      }
+      
     } catch (error) {
       console.log(error);
       res.sendStatus(502);
     }
   })
 
+router.route('/schedule/:id/:direction')
+  .get(async (req, res ) => {
+    try {
+      const direction = req.params.direction
+      if (direction == "N" || direction == "S") {
+        const result = await mta.schedule(req.params.id, process.env.FEED_ID)
+        result.schedule[req.params.id][direction].forEach(arrivalInfo => {
+          arrivalInfo.relativeTime = timeToRelative(arrivalInfo.arrivalTime)
+        })
+        res.send(result.schedule[req.params.id][direction])
+      } else {
+        res.sendStatus(400);
+      }
+    } catch (error) {
+      console.log(error);
+      res.sendStatus(502);
+    }
+  })
 
 const timeToRelative = (time) => {
   const now = new Date().valueOf()
@@ -105,11 +128,6 @@ const removeFromTree = (parent, childIdToRemove) => {
   }
   return parent;
 }
-
-
-
-
-
 
 // Register the routes & start the server
 app.use('/api', router)

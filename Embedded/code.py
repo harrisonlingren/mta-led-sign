@@ -1,7 +1,6 @@
 import time
 import board
 import json
-import math
 from adafruit_datetime import datetime
 from adafruit_matrixportal.network import Network
 from adafruit_matrixportal.matrix import Matrix
@@ -22,13 +21,9 @@ matrixportal = MatrixPortal(status_neopixel=board.NEOPIXEL, debug=True)
 # return info for a provided train schedule obj
 def get_train_info(train_schedule):
     train_info = {}
-    current_time = time.time() #timestamp
-    mins_to_departure = math.floor((train_schedule['departureTime'] - current_time) / 60) - 300
-
     train_info['route'] = train_schedule['routeId']
-    train_info['dep'] = mins_to_departure
+    train_info['dep'] = train_schedule['relativeTime']
     train_info['dir'] = secrets['mta_train_direction']
-
     return train_info
 
 def make_arrival_text(train_info):
@@ -40,7 +35,7 @@ def make_arrival_text(train_info):
 api_url = secrets['mta_api_url']
 station = secrets['mta_station']
 direction = secrets['mta_train_direction']
-request_url = "http://{}/api/schedule/{}".format(api_url, station)
+request_url = "http://{}/api/schedule/{}/{}".format(api_url, station, direction)
 
 matrixportal.add_text(
     text_position=(0, int(matrixportal.graphics.display.height * 0.25) - 2),
@@ -51,6 +46,8 @@ matrixportal.add_text(
     text_position=(0, int(matrixportal.graphics.display.height * 0.75)),
     scrolling=False,
 )
+
+matrixportal.set_text("Connecting...")
 
 localtime_refresh = None
 while True:
@@ -76,10 +73,6 @@ while True:
 
             train1 = get_train_info( schedule_directional[next_train_index] )
             train2 = get_train_info( schedule_directional[next_train_index + 1] )
-
-            # debug
-            # print("Next train: {}, direction: {}, leaving in: {}".format(train1['route'], train1['dir'], train1['dep']))
-            # print("Next train: {}, direction: {}, leaving in: {}".format(train2['route'], train2['dir'], train2['dep']))
 
             matrixportal.set_text(make_arrival_text(train1), 0)
             matrixportal.set_text(make_arrival_text(train2), 1)
