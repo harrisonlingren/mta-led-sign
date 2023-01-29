@@ -1,8 +1,6 @@
 import time
 import board
 import json
-from adafruit_datetime import datetime
-from adafruit_matrixportal.network import Network
 from adafruit_matrixportal.matrix import Matrix
 from adafruit_matrixportal.matrixportal import MatrixPortal
 
@@ -26,7 +24,7 @@ def get_train_info(train_schedule):
     train_info['dir'] = secrets['mta_train_direction']
     return train_info
 
-def make_arrival_text(train_info):
+def make_train_text(train_info):
     if train_info['dep'] >= 10:
         return " {}  {} min".format(train_info['route'], train_info['dep'])
     else:
@@ -65,20 +63,18 @@ while True:
         try:
             # print("fetching from API...")
             schedule_response = matrixportal.fetch(request_url)
-            schedule_directional = json.loads(schedule_response)[direction]
+            schedule = json.loads(schedule_response)
             next_train_index = 0
 
-            if not get_train_info( schedule_directional[0] )['dep'] > 0:
+            if not get_train_info( schedule[0] )['dep'] > 0:
                 next_train_index = 1
 
-            train1 = get_train_info( schedule_directional[next_train_index] )
-            train2 = get_train_info( schedule_directional[next_train_index + 1] )
+            train1 = get_train_info( schedule[next_train_index] )
+            train2 = get_train_info( schedule[next_train_index + 1] )
 
-            matrixportal.set_text(make_arrival_text(train1), 0)
-            matrixportal.set_text(make_arrival_text(train2), 1)
+            matrixportal.set_text(make_train_text(train1), 0)
+            matrixportal.set_text(make_train_text(train2), 1)
 
         except RuntimeError as e:
             print("Some error occured, retrying! -", e)
             continue
-
-    
