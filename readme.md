@@ -152,7 +152,7 @@ After you have flashed your Matrix Portal with CircuitPython, connect it to your
 
 # REST API
 
-The REST API for the server appliation is described below. Data formatted and parsed from [mta-gtfs](https://github.com/aamaliaa/mta-gtfs), an NYC MTA API library.
+The REST API for the server appliation is described below. Data formatted and parsed from [mta-gtfs-jl](https://github.com/jeffreyclu/mta-gtfs), an NYC MTA API library.
 
 ## Get MTA subway service status info
 
