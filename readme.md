@@ -2,87 +2,108 @@
 
 
 * An Express.js server which parses current train data from mta-gtfs and provides an API for easy display of data
-* A Node.js interface application that displays selected NYC subway station data on a 64x32 LED Matrix via a Raspberry Pi
-* TODO: Finish PyPortal Python version
+* A CircuitPython app to handle display of selected NYC subway station data on a 64x32 LED Matrix via the Adafruit Matrix Portal microcontroller.
 
 
 ## Requirements
 * MTA API Key
   * https://datamine.mta.info/
-* Raspberry Pi (w/ headers and Wifi)
-* SD Card (for the Raspberry Pi)
-* RGB Matrix Bonnet (or HAT)
-  * https://www.adafruit.com/product/3211
-* 5V 4A power supply (to power Raspberry Pi & LED Matrix)
+* Adafruit [Matrix Portal](https://learn.adafruit.com/adafruit-matrixportal-m4)
+  * https://www.adafruit.com/product/4745
+* 5V 4A power supply (to power LED matrix + portal)
   * https://www.adafruit.com/product/1466
+* 5V Power Cable
+  * In case the LED matrix didn't come with it, pick this up too
+  * https://www.adafruit.com/product/4767 
 * 64x32 LED RGB Matrix
-  * https://www.adafruit.com/product/2277
-  * https://www.alibaba.com/product-detail/Cheapest-P5-RGB-pixel-panel-HD_60814325723.html?spm=a2700.7724838.2017115.1.5c6e13d0O8IYUq&s=p
+  * Example: https://www.adafruit.com/product/2277
+  * Any 64x32 panel works as long as it's compatible with the HUB75 standard
 
-![Front of 64x32 RGB LED Matrix display](https://imgur.com/G9VgqeS.jpg)
-
+&nbsp;
+![Front of 64x32 RGB LED Matrix display](https://i.imgur.com/ylAQq8a.png)
 
 # Hardware
-### Raspberry Pi & RGB Matrix Bonnet
-Install the RGB Matrix Bonnet (or HAT) onto the Raspberry Pi's 40-pin GPIO header. Be sure you have a Raspberry Pi with headers installed (or you'll end up ordering the GPIO header separately and solder yourself to the Pi). A raspberry Pi Zero WH and the Bonnet should be plug and play. The older HAT model will require soldering a header to it.
-  * From the description of the [RGB Matrix Bonnet from Adafruit](https://www.adafruit.com/product/3211):
-    * "Bonnet" boards work on any Raspberry Pi with a 40-pin GPIO header — Zero, Zero W/WH, Model A+, B+, Pi 2 and Pi 3. They do not work with older 26-pin boards like the original Model A or B
-
-The Raspberry Pi/Bonnet combo can be discreetly fasted to the back of the display with some double sided tape, velcro, etc.
+### Adafruit Matrix Portal
+Install the Matrix Portal directly onto the LED Matrix using the 16-pin HUB75 connector. Make sure that you install it with the Portal's USB-C connector facing outwards, and with the Matrix's arrows printed on the rear side pointing **up** and **right** (orientation matters).
 
 ### RGB LED Matrix
-The display should come with a power cable and a data cable. It might even come with multiple data cables in the event that you want to bridge dipslays. The data cable will plug directly into the back of the display and your Bonnet/HAT. The power cable will also plugin into the back of the display and two pronged ends will connect to slotted terminals with screws on the Bonnet/HAT.
-
+It might even come with multiple data cables in the event that you want to bridge dipslays. The data cable will plug directly into the back of the display and your Bonnet/HAT. The power cable will also plugin into the back of the display and two pronged ends will connect to slotted terminals with screws on the Bonnet/HAT.
 
 ### Power cable
-The power cable plugs directly into the Bonnet/HAT and will share power to both the Raspberry Pi and the display.
+Connect the forked ends of the power cable to the screw standoffs on the Matrix Portal, using the included screws. Attach the other end to the 4-pin power connector (make sure to connect the right side for 5V & ground).
 
-![Backside of display with Raspberry Pi & RGB Matrix HAT](https://imgur.com/X1i7x47.jpg)
-
-
+![Backside of display with Raspberry Pi & RGB Matrix HAT](https://cdn-learn.adafruit.com/assets/assets/000/095/023/original/led_matrices_4745-12.jpg?1600966452)
 
 # Software
+This project is split in two parts: 
+1. The **API** (`Server/`) which connects to the MTA's API, and offers an endpoint for the Matrix to retrieve data from over your local Wi-Fi network.
+2. The **CircuitPython code** for the Matrix Portal (`Embedded/`), which connects to your local Wi-Fi network, queries the API server, and displays upcoming departures for a given MTA subway station.
+
 ## Dependencies
 
-* Node.js LTS & npm installed on Raspberry Pi
-  * https://linuxize.com/post/how-to-install-node-js-on-raspberry-pi/
-* [Forever.js](https://www.npmjs.com/package/forever) installed globally
-  * `sudo npm install forever -g`
+### API server
 
+* Node.js LTS & npm installed on the computer or server which will host the API
+* (optional) [Forever.js](https://www.npmjs.com/package/forever) installed globally
+  * `sudo npm install forever -g`
+  * Allows the API server to run continuously
+
+### Matrix Portal
+
+* [CircuitPython](https://learn.adafruit.com/adafruit-matrixportal-m4/install-circuitpython) (see "Install CircuitPython" section)
+* [Adafruit libraries](https://learn.adafruit.com/adafruit-matrixportal-m4/circuitpython-setup) for CircuitPython. The below are needed for this project:
+  * adafruit_matrixportal
+  * adafruit_portalbase
+  * adafruit_esp32spi
+  * neopixel.mpy
+  * adafruit_bus_device
+  * adafruit_requests.mpy
+  * adafruit_fakerequests.mpy
+  * adafruit_io
+  * adafruit_bitmap_font
+  * adafruit_display_text
+  * adafruit_minimqtt
+  * adafruit_datetime
 
 ## Getting Started
-1. Sign up for an account and generate an API key from the MTA Real-Time Data Feeds website
-    * https://datamine.mta.info/
-2. Setup your Raspberry Pi and set the wifi to the same network as your development machine
-
+1. Sign up for an account and generate an API key from the MTA Real-Time Data Feeds website: https://api.mta.info
+2. Set up any dependencies on the host machine you'll use for the API. A raspberry pi at home works great, or you could also set up on a cloud VPS or managed service that can run node.js.
 
 ## Installing
-
-Install dependencies
+Install dependencies:
 
 ```bash
-# Install dependencies for the API server
+# For the API server
 $ cd nyc-train-sign/Server/node
-$ npm install
-
-# Install dependencies for the LED Matrix UI
-$ cd nyc-train-sign/UI/node
 $ npm install
 ```
 
 ## Configuration
 
 ### 1. Configure and test the Server application
-Supply your MTA API key that you generated from the MTA datamine website.
-```bash
-# Update the Server app.js file with your MTA API key, ex:
-#  const mta = new Mta({
-#    key: '<YOUR_MTA_API_KEY>',
-#    feed_id: 1
-#  })
+In `Server/node`, create a file called `.env` and supply the below info:
 
-$ cd nyc-train-sign/Server/node
-$ nano app.js
+`API_KEY`: Your MTA access token  
+`FEED_ID`: The ID of the feed to check for train routes. This should be one of the following based on your local station:
+
+```json
+{
+  '123456': undefined,
+  'ACE': '-ace',
+  'BDFM': '-bdfm',
+  'G': '-g',
+  'JZ': '-jz',
+  'NQRW': '-nqrw',
+  'L': '-l',
+  '7': '-7',
+  'SIR': '-si'
+}
+```
+
+Example `.env`:
+```bash
+API_KEY=<YOUR_MTA_API_KEY>
+FEED_ID=-nqrw
 ```
 
 After configuring the Server applicaton, you should test it by running it manually. This will be necessary as you will need to access the API in order to find your `stationId` which will be required to configure the UI application.
@@ -106,46 +127,30 @@ $ curl http://raspberrypi.local:8080/api/station
 
 
 ### 2. Configure and test the UI application
-Update the UI configuration file. Use your subway station's `stop_id` you wrote down for the `stationId`. Supply a direction, "N", or "S", and the name of your station and train number to be displayed. You can also change the colors of the font and circle to match your favorite train. I like the 3 and the 4 trains best.
-```bash
-# Update the UI config file with subway preferences, ex:
-#  stationId: 249,
-#  direction: "N"
-#  stationName: "Kingston",
-#  trainName: "3"
-#  textColor: [0, 110, 0],
-#  circleColor: [110, 0, 0],
-#  circleNumberColor: [0, 0, 0],
-#  loadingTextColor: [255, 255, 255]
-
-$ cd nyc-train-sign/UI/node
-$ nano config.json
+Update the UI configuration file. Use your subway station's `stop_id` you wrote down for the `mta_station`. Supply a direction, "N", or "S", and the IP + Port or domain name of your API server from step 1:
+```Python
+# Update your secrets.py with Wi-Fi info & subway preferences, ex:
+secrets = {
+    'ssid' : '<YOUR_WIFI_SSID>',
+    'password' : '<YOUR_WIFI_PASSWORD>',
+    
+    # http://worldtimeapi.org/timezones
+    'timezone' : "America/New_York", 
+    
+    # find this ID from your API endpoint: 
+    # localhost:8080/api/station
+    'mta_station': 'R03', 
+    
+    # either N or S
+    'mta_train_direction': 'S', 
+    
+    # update this to the IP:Port or host domain 
+    # that is running your API server
+    'mta_api_url': '192.168.86.32:8080'
+}
 ```
 
-Manually run the UI application to test that it displays on the LED Matrix.
-
-```bash
-# Run the server manually
-$ cd nyc-train-sign/UI/node
-$ sudo node app.js
-  > 249 Kingston 13 min / 249 Kingston 29 min
-  > 249 Kingston 11 min / 249 Kingston 28 min
-  > 249 Kingston 10 min / 249 Kingston 27 min
-```
-
-
-
-## Setup for auto-boot on power on
-
-Set the applications to persist beyond the console window and start automatically on system reboot. This will allow everything to startup when the device is plugged in (am I IoT yet?).
-```bash
-# Set the scripts to start with Forever.js on reboot
-$ sudo crontab -e
-
-# Add lines:
-@reboot /usr/local/bin/forever start /home/pi/nyc-train-sign/Server/Node/index.js
-@reboot /usr/local/bin/forever start /home/pi/nyc-train-sign/UI/node/app.js
-```
+After you have flashed your Matrix Portal with CircuitPython, connect it to your computer via USB and copy over all the files inside the `Embedded/` folder to its root directory.
 
 # REST API
 
@@ -341,12 +346,3 @@ The REST API for the server appliation is described below. Data formatted and pa
   ]
 }
 ```
-
-
-
-
-# TODO:
-* Finish the Python version for PyPortal
-* Write some tests
-* Make a cool mobile app inteface to change the train preferences
-* Add some potential status/delay notifcation data
