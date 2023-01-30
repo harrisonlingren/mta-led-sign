@@ -1,7 +1,8 @@
-import time
 import board
+import displayio
 import json
 import supervisor
+import time
 from adafruit_matrixportal.matrixportal import MatrixPortal
 
 # Get wifi details & environment variables from secrets.py
@@ -55,6 +56,18 @@ def make_train_text(train_info):
     else:
         return " {} min".format(train_info['dep'])
 
+def display_bmp(bmp_path, pos_x, pos_y):
+    try:
+        bmp = displayio.OnDiskBitmap(bmp_path)
+        tg = displayio.TileGrid(
+            bmp,
+            pixel_shader=bmp.pixel_shader,
+            x=pos_x,
+            y=pos_y
+        )
+        matrixportal.splash.append(tg)
+    except:
+        raise Exception('Error loading {}'.format(bmp_path))
 
 # -----------------------------------------------------
 # MAIN PROGRAM
@@ -137,22 +150,22 @@ try:
                 matrixportal.set_text(" ", 0)
                 started = True
 
-                # update graphics + text
+                # update graphics
+                display_bmp( line_bmp[ train1['route'] ], 0, 0 )
+                display_bmp( line_bmp[ train2['route'] ], 0, 16 )
 
-                matrixportal.set_background( line_bmp[ train1["route"] ], (0, 0) )
+                # update text
                 matrixportal.set_text(make_train_text(train1), 1)
                 matrixportal.set_text(train1['route'], 3)
-
-                matrixportal.set_background( line_bmp[ train2["route"] ], (0, 16) )
                 matrixportal.set_text(make_train_text(train2), 2)
                 matrixportal.set_text(train2['route'], 4)
 
             except RuntimeError as e:
                 print("Some error occured, retrying! -", e)
                 continue
-except:
+except Exception as e:
     error_text = "Error: restarting panel..."
-    print(error_text)
+    print(error_text, e)
     matrixportal.set_text(error_text, 0)
     matrixportal.scroll_text(0.03)
     supervisor.reload()
