@@ -1,7 +1,7 @@
-import time
 import board
 import json
 import supervisor
+from adafruit_datetime import datetime
 from adafruit_matrixportal.matrixportal import MatrixPortal
 
 # Get wifi details & environment variables from secrets.py
@@ -104,18 +104,20 @@ matrixportal.add_text(
 
 matrixportal.set_text("Connecting to: {}...".format(secrets['ssid']), 0)
 
-localtime_refresh = None
+lastruntime = None
 started = False
 try:
     while True:
         if not started:
             matrixportal.scroll_text(0.03)
         # query once every 30s (and on first run)
-        if (not localtime_refresh) or (time.monotonic() - localtime_refresh) > 30:
+        currenttime = datetime.now()
+        if lastruntime:
+            deltatime = currenttime - lastruntime
+
+        if (not lastruntime) or (deltatime.total_seconds() > 30):
             try:
-                print("Getting time from internet!")
-                matrixportal.get_local_time()
-                localtime_refresh = time.monotonic()
+                lastruntime = datetime.now()
             except RuntimeError as e:
                 print("Some error occured, retrying! -", e)
                 continue
