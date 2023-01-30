@@ -102,7 +102,7 @@ matrixportal.add_text(
     scrolling=False,
 )
 
-matrixportal.set_text("Connecting to Wi-Fi network...", 0)
+matrixportal.set_text("Connecting to: {}...".format(secrets['ssid']), 0)
 
 localtime_refresh = None
 started = False
