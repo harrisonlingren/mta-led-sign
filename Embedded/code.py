@@ -1,4 +1,5 @@
 import board
+import displayio
 import json
 import supervisor
 from adafruit_datetime import datetime
@@ -13,32 +14,6 @@ except ImportError:
 
 # Init HW
 matrixportal = MatrixPortal(status_neopixel=board.NEOPIXEL, debug=True, color_order="RBG")
-
-# Set up dict for quick gfx reference by route
-line_bmp = {
-    "1": "gfx/123.bmp",
-    "2": "gfx/123.bmp",
-    "3": "gfx/123.bmp",
-    "4": "gfx/456.bmp",
-    "5": "gfx/456.bmp",
-    "6": "gfx/456.bmp",
-    "7": "gfx/7.bmp",
-    "A": "gfx/ACE.bmp",
-    "C": "gfx/ACE.bmp",
-    "E": "gfx/ACE.bmp",
-    "B": "gfx/BDFM.bmp",
-    "D": "gfx/BDFM.bmp",
-    "F": "gfx/BDFM.bmp",
-    "M": "gfx/BDFM.bmp",
-    "G": "gfx/G.bmp",
-    "J": "gfx/JZ.bmp",
-    "Z": "gfx/JZ.bmp",
-    "L": "gfx/L.bmp",
-    "N": "gfx/NQRW.bmp",
-    "Q": "gfx/NQRW.bmp",
-    "R": "gfx/NQRW.bmp",
-    "W": "gfx/NQRW.bmp"
-}
 
 # return info for a provided train schedule obj
 def get_train_info(train_schedule):
@@ -55,6 +30,21 @@ def make_train_text(train_info):
     else:
         return " {} min".format(train_info['dep'])
 
+def display_bmp(bmp_path, pos_x, pos_y):
+    try:
+        bmp = displayio.OnDiskBitmap(bmp_path)
+        tg = displayio.TileGrid(
+            bmp,
+            pixel_shader=bmp.pixel_shader,
+            x=pos_x,
+            y=pos_y
+        )
+        matrixportal.splash.append(tg)
+    except:
+        raise Exception('Error loading {}'.format(bmp_path))
+
+def get_bmp_for_route(train_info):
+    return "gfx/{}.bmp".format(train_info['route'])
 
 # -----------------------------------------------------
 # MAIN PROGRAM
@@ -66,7 +56,7 @@ station = secrets['mta_station']
 direction = secrets['mta_train_direction']
 request_url = "http://{}/api/schedule/{}/{}".format(api_url, station, direction)
 
-# Set up text labels for display
+# Set up text labels for dynamic display
 # Connecting text (id: 0)
 matrixportal.add_text(
     text_color=0xFFFFFF,
@@ -77,28 +67,14 @@ matrixportal.add_text(
 # train1 time (id: 1)
 matrixportal.add_text(
     text_color=0xFFFFFF,
-    text_position=(22, int(matrixportal.graphics.display.height * 0.25) - 2),
+    text_position=(24, int(matrixportal.graphics.display.height * 0.25) - 1),
     scrolling=False,
 )
 
 # train2 time (id: 2)
 matrixportal.add_text(
     text_color=0xFFFFFF,
-    text_position=(22, int(matrixportal.graphics.display.height * 0.75)),
-    scrolling=False,
-)
-
-# train1 sign (id: 3)
-matrixportal.add_text(
-    text_color=0x000000,
-    text_position=(7, 7),
-    scrolling=False,
-)
-
-# train2 sign (id: 4)
-matrixportal.add_text(
-    text_color=0x000000,
-    text_position=(7, 23),
+    text_position=(24, int(matrixportal.graphics.display.height * 0.75) - 1),
     scrolling=False,
 )
 
@@ -124,7 +100,6 @@ try:
 
             # get next train info
             try:
-                # print("fetching from API...")
                 schedule_response = matrixportal.fetch(request_url)
                 schedule = json.loads(schedule_response)
                 next_train_index = 0
@@ -139,22 +114,20 @@ try:
                 matrixportal.set_text(" ", 0)
                 started = True
 
-                # update graphics + text
+                # update graphics
+                display_bmp( get_bmp_for_route(train1), 3, 0 )
+                display_bmp( get_bmp_for_route(train2), 3, 16 )
 
-                matrixportal.set_background( line_bmp[ train1["route"] ], (0, 0) )
+                # update text
                 matrixportal.set_text(make_train_text(train1), 1)
-                matrixportal.set_text(train1['route'], 3)
-
-                matrixportal.set_background( line_bmp[ train2["route"] ], (0, 16) )
                 matrixportal.set_text(make_train_text(train2), 2)
-                matrixportal.set_text(train2['route'], 4)
 
             except RuntimeError as e:
                 print("Some error occured, retrying! -", e)
                 continue
-except:
+except Exception as e:
     error_text = "Error: restarting panel..."
-    print(error_text)
+    print(error_text, e)
     matrixportal.set_text(error_text, 0)
     matrixportal.scroll_text(0.03)
     supervisor.reload()
