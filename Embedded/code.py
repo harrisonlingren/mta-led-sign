@@ -1,7 +1,6 @@
 import time
 import board
 import json
-from adafruit_matrixportal.matrix import Matrix
 from adafruit_matrixportal.matrixportal import MatrixPortal
 
 # Get wifi details & environment variables from secrets.py
@@ -11,10 +10,34 @@ except ImportError:
     print("WiFi secrets are kept in secrets.py, please add them there!")
     raise
 
-matrix = Matrix()
-
 # Init HW
 matrixportal = MatrixPortal(status_neopixel=board.NEOPIXEL, debug=True)
+
+# Set up dict for quick gfx reference by route
+line_bmp = {
+    "1": "gfx/123.bmp",
+    "2": "gfx/123.bmp",
+    "3": "gfx/123.bmp",
+    "4": "gfx/456.bmp",
+    "5": "gfx/456.bmp",
+    "6": "gfx/456.bmp",
+    "7": "gfx/7.bmp",
+    "A": "gfx/ACE.bmp",
+    "C": "gfx/ACE.bmp",
+    "E": "gfx/ACE.bmp",
+    "B": "gfx/BDFM.bmp",
+    "D": "gfx/BDFM.bmp",
+    "F": "gfx/BDFM.bmp",
+    "M": "gfx/BDFM.bmp",
+    "G": "gfx/G.bmp",
+    "J": "gfx/JZ.bmp",
+    "Z": "gfx/JZ.bmp",
+    "L": "gfx/L.bmp",
+    "N": "gfx/NQRW.bmp",
+    "Q": "gfx/NQRW.bmp",
+    "R": "gfx/NQRW.bmp",
+    "W": "gfx/NQRW.bmp"
+}
 
 # return info for a provided train schedule obj
 def get_train_info(train_schedule):
@@ -24,17 +47,25 @@ def get_train_info(train_schedule):
     train_info['dir'] = secrets['mta_train_direction']
     return train_info
 
+# return correct relative time string based on number length
 def make_train_text(train_info):
     if train_info['dep'] >= 10:
         return "{} min".format(train_info['dep'])
     else:
         return " {} min".format(train_info['dep'])
 
+
+# -----------------------------------------------------
+# MAIN PROGRAM
+# -----------------------------------------------------
+
+# load variables from secrets.py config
 api_url = secrets['mta_api_url']
 station = secrets['mta_station']
 direction = secrets['mta_train_direction']
 request_url = "http://{}/api/schedule/{}/{}".format(api_url, station, direction)
 
+# Set up text labels for display
 # Connecting text (id: 0)
 matrixportal.add_text(
     text_color=0xFFFFFF,
@@ -104,10 +135,13 @@ while True:
             matrixportal.set_text(" ", 0)
             started = True
             
-            # update graphics
-            matrixportal.set_background("gfx/routes.bmp")
+            # update graphics + text
+            
+            matrixportal.set_background( line_bmp[ train1["route"] ], (0, 0) )
             matrixportal.set_text(make_train_text(train1), 1)
             matrixportal.set_text(train1['route'], 3)
+
+            matrixportal.set_background( line_bmp[ train2["route"] ], (0, 16) )
             matrixportal.set_text(make_train_text(train2), 2)
             matrixportal.set_text(train2['route'], 4)
 
