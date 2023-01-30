@@ -1,6 +1,7 @@
 import time
 import board
 import json
+import supervisor
 from adafruit_matrixportal.matrixportal import MatrixPortal
 
 # Get wifi details & environment variables from secrets.py
@@ -11,7 +12,7 @@ except ImportError:
     raise
 
 # Init HW
-matrixportal = MatrixPortal(status_neopixel=board.NEOPIXEL, debug=True)
+matrixportal = MatrixPortal(status_neopixel=board.NEOPIXEL, debug=True, color_order="RBG")
 
 # Set up dict for quick gfx reference by route
 line_bmp = {
@@ -105,46 +106,53 @@ matrixportal.set_text("Connecting to Wi-Fi network...", 0)
 
 localtime_refresh = None
 started = False
-while True:
-    if not started:
-        matrixportal.scroll_text(0.04)
-    # query once every 30s (and on first run)
-    if (not localtime_refresh) or (time.monotonic() - localtime_refresh) > 30:
-        try:
-            print("Getting time from internet!")
-            matrixportal.get_local_time()
-            localtime_refresh = time.monotonic()
-        except RuntimeError as e:
-            print("Some error occured, retrying! -", e)
-            continue
-    
-        # get next train info
-        try:
-            # print("fetching from API...")
-            schedule_response = matrixportal.fetch(request_url)
-            schedule = json.loads(schedule_response)
-            next_train_index = 0
+try:
+    while True:
+        if not started:
+            matrixportal.scroll_text(0.03)
+        # query once every 30s (and on first run)
+        if (not localtime_refresh) or (time.monotonic() - localtime_refresh) > 30:
+            try:
+                print("Getting time from internet!")
+                matrixportal.get_local_time()
+                localtime_refresh = time.monotonic()
+            except RuntimeError as e:
+                print("Some error occured, retrying! -", e)
+                continue
 
-            if not get_train_info( schedule[0] )['dep'] > 0:
-                next_train_index = 1
+            # get next train info
+            try:
+                # print("fetching from API...")
+                schedule_response = matrixportal.fetch(request_url)
+                schedule = json.loads(schedule_response)
+                next_train_index = 0
 
-            train1 = get_train_info( schedule[next_train_index] )
-            train2 = get_train_info( schedule[next_train_index + 1] )
+                if not get_train_info( schedule[0] )['dep'] > 0:
+                    next_train_index = 1
 
-            # clear Connecting text and stop initial check
-            matrixportal.set_text(" ", 0)
-            started = True
-            
-            # update graphics + text
-            
-            matrixportal.set_background( line_bmp[ train1["route"] ], (0, 0) )
-            matrixportal.set_text(make_train_text(train1), 1)
-            matrixportal.set_text(train1['route'], 3)
+                train1 = get_train_info( schedule[next_train_index] )
+                train2 = get_train_info( schedule[next_train_index + 1] )
 
-            matrixportal.set_background( line_bmp[ train2["route"] ], (0, 16) )
-            matrixportal.set_text(make_train_text(train2), 2)
-            matrixportal.set_text(train2['route'], 4)
+                # clear Connecting text and stop initial check
+                matrixportal.set_text(" ", 0)
+                started = True
 
-        except RuntimeError as e:
-            print("Some error occured, retrying! -", e)
-            continue
+                # update graphics + text
+
+                matrixportal.set_background( line_bmp[ train1["route"] ], (0, 0) )
+                matrixportal.set_text(make_train_text(train1), 1)
+                matrixportal.set_text(train1['route'], 3)
+
+                matrixportal.set_background( line_bmp[ train2["route"] ], (0, 16) )
+                matrixportal.set_text(make_train_text(train2), 2)
+                matrixportal.set_text(train2['route'], 4)
+
+            except RuntimeError as e:
+                print("Some error occured, retrying! -", e)
+                continue
+except:
+    error_text = "Error: restarting panel..."
+    print(error_text)
+    matrixportal.set_text(error_text, 0)
+    matrixportal.scroll_text(0.03)
+    supervisor.reload()
