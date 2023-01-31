@@ -13,6 +13,12 @@ const port = process.env.PORT || 8080
 const router = express.Router()
 app.use(express.json())
 
+// helper function to identify feed
+feeds = require('./feeds.json')
+function getFeedForLine(line) {
+  return feeds[line] || undefined
+}
+
 // middleware to use for all requests
 router.use((req, res, next) => {
 	next()
@@ -55,7 +61,8 @@ router.route('/schedule')
 router.route('/schedule/:id')
 	.get(async (req, res ) => {
     try {
-      const result = await mta.schedule(req.params.id, process.env.FEED_ID)
+      const feed = getFeedForLine(req.params.trainName)
+      const result = await mta.schedule(req.params.id, feed)
       if (result.schedule) {
         res.send(result.schedule[req.params.id])
       } else {
@@ -71,9 +78,10 @@ router.route('/schedule/:id')
 router.route('/schedule/:id/:trainName/:direction')
   .get(async (req, res ) => {
     try {
+      const feed = getFeedForLine(req.params.trainName)
       const direction = req.params.direction
       if (direction == "N" || direction == "S") {
-        const result = await mta.schedule(req.params.id, process.env.FEED_ID)
+        const result = await mta.schedule(req.params.id, feed)
         let filteredResult = removeFromTree(result.schedule[req.params.id], req.params.trainName)
         filteredResult[direction].forEach(arrivalInfo => {
           arrivalInfo.relativeTime = timeToRelative(arrivalInfo.arrivalTime)
@@ -92,9 +100,11 @@ router.route('/schedule/:id/:trainName/:direction')
 router.route('/schedule/:id/:direction')
   .get(async (req, res ) => {
     try {
+      const feedPrefix = req.params.id[0]
+      const feed = getFeedForLine(feedPrefix)
       const direction = req.params.direction
       if (direction == "N" || direction == "S") {
-        const result = await mta.schedule(req.params.id, process.env.FEED_ID)
+        const result = await mta.schedule(req.params.id, feed)
         result.schedule[req.params.id][direction].forEach(arrivalInfo => {
           arrivalInfo.relativeTime = timeToRelative(arrivalInfo.arrivalTime)
         })
