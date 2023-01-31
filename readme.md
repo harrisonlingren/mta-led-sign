@@ -4,115 +4,103 @@
 * A CircuitPython app to handle display of selected NYC subway station data on a 64x32 LED Matrix via the Adafruit Matrix Portal microcontroller.
 
 ## Requirements
-* MTA API Key
-  * https://api.mta.info/
-* Adafruit [Matrix Portal](https://learn.adafruit.com/adafruit-matrixportal-m4)
-  * https://www.adafruit.com/product/4745
+
+* MTA API Key: https://api.mta.info/
+* Adafruit [Matrix Portal](https://learn.adafruit.com/adafruit-matrixportal-m4): https://www.adafruit.com/product/4745
 * USB-C 5V 4A power supply (to power LED matrix + portal)
   * Something like this: https://amzn.com/dp/B091DS2M8X
 * 5V Power Cable
-  * In case the LED matrix didn't come with it, pick this up too: https://www.adafruit.com/product/4767 
+  * In case the LED matrix didn't come with it, pick this up too: https://www.adafruit.com/product/4767
 * 64x32 LED RGB Matrix
   * Example: https://www.adafruit.com/product/2277
-  * Any 64x32 panel works as long as it's compatible with the HUB75 standard 
- 
+  * Any 64x32 panel works as long as it's compatible with the HUB75 standard
+
 &nbsp;
 ![Front of 64x32 RGB LED Matrix display](https://i.imgur.com/nMCIrFe.png)
 
-# Hardware
+## Hardware
+
 ### Adafruit Matrix Portal
+
 Install the Matrix Portal directly onto the LED Matrix using the 16-pin HUB75 connector. Make sure that you install it with the Portal's USB-C connector facing outwards, and with the Matrix's arrows printed on the rear side pointing **up** and **right** (orientation matters).
 
-### RGB LED Matrix
-It might even come with multiple data cables in the event that you want to bridge dipslays. The data cable will plug directly into the back of the display and your Bonnet/HAT. The power cable will also plugin into the back of the display and two pronged ends will connect to slotted terminals with screws on the Bonnet/HAT.
-
 ### Power cable
+
 Connect the forked ends of the power cable to the screw standoffs on the Matrix Portal, using the included screws. Attach the other end to the 4-pin power connector (make sure to connect the right side for 5V & ground).
 
 ![Backside of display with Matrix Portal](https://cdn-learn.adafruit.com/assets/assets/000/095/023/original/led_matrices_4745-12.jpg?1600966452)
 
-# Software
-This project is split in two parts: 
+## Software
+
+This project is split in two parts:
+
 1. The **API** (`Server/`) which connects to the MTA's API, and offers an endpoint for the Matrix to retrieve data from over your local Wi-Fi network.
 2. The **CircuitPython code** for the Matrix Portal (`Embedded/`), which connects to your local Wi-Fi network, queries the API server, and displays upcoming departures for a given MTA subway station.
 
-## Dependencies
+### Dependencies
 
-### API server
+#### API server
 
 * Node.js LTS & npm installed on the computer or server which will host the API
 * (optional) [Forever.js](https://www.npmjs.com/package/forever) installed globally
   * `sudo npm install forever -g`
   * Allows the API server to run continuously
 
-### Matrix Portal
+#### Matrix Portal
 
 * [CircuitPython](https://learn.adafruit.com/adafruit-matrixportal-m4/install-circuitpython) (see "Install CircuitPython" section)
 * [Adafruit libraries](https://learn.adafruit.com/adafruit-matrixportal-m4/circuitpython-setup) for CircuitPython. The below are needed for this project:
-  * adafruit_matrixportal
-  * adafruit_portalbase
-  * adafruit_esp32spi
-  * neopixel.mpy
-  * adafruit_bus_device
-  * adafruit_requests.mpy
-  * adafruit_fakerequests.mpy
-  * adafruit_io
-  * adafruit_bitmap_font
-  * adafruit_display_text
-  * adafruit_minimqtt
-  * adafruit_datetime
+  * `adafruit_matrixportal`
+  * `adafruit_portalbase`
+  * `adafruit_esp32spi`
+  * `neopixel.mpy`
+  * `adafruit_bus_device`
+  * `adafruit_requests.mpy`
+  * `adafruit_fakerequests.mpy`
+  * `adafruit_io`
+  * `adafruit_bitmap_font`
+  * `adafruit_display_text`
+  * `adafruit_minimqtt`
+  * `adafruit_datetime`
 
-## Getting Started
+### Getting Started
+
 1. Sign up for an account and generate an API key from the MTA Real-Time Data Feeds website: https://api.mta.info
 2. Set up any dependencies on the host machine you'll use for the API. A Raspberry Pi at home works great, or you could also set up on a cloud VPS or managed service that can run node.js.
 
-## Installing
+#### Installing
+
 Install dependencies:
 
 ```bash
 # For the API server
-$ cd nyc-train-sign/Server/node
+$ cd nyc-train-sign/Server
 $ npm install
 ```
 
-## Configuration
+### Configuration
 
-### 1. Configure and test the Server application
-In `Server/node`, create a file called `.env` and supply the below info:
+#### 1. Configure and test the Server application
 
-`API_KEY`: Your MTA access token  
-`FEED_ID`: The ID of the feed to check for train routes. This should be one of the following based on your local station:
+In `Server/`, create a file called `.env` and supply your MTA API token as shown below:
 
-```js
-{
-  '123456': undefined,
-  'ACE': '-ace',
-  'BDFM': '-bdfm',
-  'G': '-g',
-  'JZ': '-jz',
-  'NQRW': '-nqrw',
-  'L': '-l',
-  '7': '-7',
-  'SIR': '-si'
-}
-```
+`.env` example:
 
-Example `.env`:
 ```bash
 API_KEY=<YOUR_MTA_API_KEY>
-FEED_ID=-nqrw
 ```
 
 After configuring the Server applicaton, you should test it by running it manually. This will be necessary as you will need to access the API in order to find your `stationId` which will be required to configure the UI application.
 
 ```bash
 # Run the server manually
-$ cd nyc-train-sign/Server/node
+$ cd nyc-train-sign/Server
 $ sudo node app.js
   > Node.js server listening on 8080
 ```
 
 Get the list of subway stations and find yours. Make note/write down of the `stop_id` associated to your subway station:
+
 ```bash
 # In an internet browser, go to the below address, or curl from a console:
 # From your server host machine:
@@ -122,9 +110,10 @@ $ curl localhost:8080/api/station
 $ curl <SERVER_IP>:8080/api/station
 ```
 
+#### 2. Configure and test the UI application
 
-### 2. Configure and test the UI application
 Update the UI configuration file. Use your subway station's `stop_id` you wrote down for the `mta_station`. Supply a direction, "N", or "S", and the IP + Port or domain name of your API server from step 1:
+
 ```Python
 # Update your secrets.py with Wi-Fi info & subway preferences, ex:
 secrets = {
@@ -154,17 +143,17 @@ secrets = {
 
 After you have flashed your Matrix Portal with CircuitPython, connect it to your computer via USB and copy over all the files inside the `Embedded/` folder to its root directory.
 
-# REST API
+## REST API
 
 The REST API for the server appliation is described below. Data formatted and parsed from [mta-gtfs-jl](https://github.com/jeffreyclu/mta-gtfs), an NYC MTA API library.
 
-## Get MTA subway service status info
+### Get MTA subway service status info
 
-### Request
+#### Request
 
 `GET /api/status/`
 
-### Response
+#### Response
 
 ```json
 [
@@ -190,16 +179,15 @@ The REST API for the server appliation is described below. Data formatted and pa
 ]
 ```
 
+### Get MTA subway service status info for specific subway train name
 
-## Get MTA subway service status info for specific subway train name
-
-### Request
+#### Request
 
 `GET /api/status/:trainName/`
 
-  * GET /api/status/3/
+* GET /api/status/3/
 
-### Response
+#### Response
 
 ```json
 [
@@ -213,14 +201,13 @@ The REST API for the server appliation is described below. Data formatted and pa
 ]
 ```
 
+### Get a list of all subway stations
 
-## Get a list of all subway stations
-
-### Request
+#### Request
 
 `GET /api/station/`
 
-### Response
+#### Response
 
 ```json
 {
@@ -251,16 +238,15 @@ The REST API for the server appliation is described below. Data formatted and pa
 }
 ```
 
+### Get a single subway station's metadata
 
-## Get a single subway station's metadata
-
-### Request
+#### Request
 
 `GET /api/station/:stationId/`
 
-  * GET /api/station/249/
+* GET /api/station/249/
 
-### Response
+#### Response
 
 ```json
 {
@@ -277,15 +263,15 @@ The REST API for the server appliation is described below. Data formatted and pa
 }
 ```
 
-## Get the current schedule of trains at a specific station
+### Get the current schedule of trains at a specific station
 
-### Request
+#### Request
 
 `GET /api/schedule/:stationId/`
 
-  * GET /api/schedule/249/
+* GET /api/schedule/249/
 
-### Response
+#### Response
 
 ```json
 {
@@ -320,15 +306,15 @@ The REST API for the server appliation is described below. Data formatted and pa
 }
 ```
 
-## Get the current schedule of a specific train at a specific station
+### Get the current schedule of a specific train at a specific station
 
-### Request
+#### Request
 
 `GET /api/schedule/:stationId/:trainName/:direction/`
 
-  * GET /api/schedule/249/3/N/
+* GET /api/schedule/249/3/N/
 
-### Response
+#### Response
 
 ```json
 {
