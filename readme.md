@@ -14,10 +14,10 @@
   * In case the LED matrix didn't come with it, pick this up too: https://www.adafruit.com/product/4767 
 * 64x32 LED RGB Matrix
   * Example: https://www.adafruit.com/product/2277
-  * Any 64x32 panel works as long as it's compatible with the HUB75 standard
-
+  * Any 64x32 panel works as long as it's compatible with the HUB75 standard 
+ 
 &nbsp;
-![Front of 64x32 RGB LED Matrix display](https://i.imgur.com/ylAQq8a.png)
+![Front of 64x32 RGB LED Matrix display](https://i.imgur.com/nMCIrFe.png)
 
 # Hardware
 ### Adafruit Matrix Portal
