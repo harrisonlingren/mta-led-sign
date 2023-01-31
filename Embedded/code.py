@@ -1,9 +1,11 @@
-import board
-import displayio
-import json
-import supervisor
+from board import NEOPIXEL
+from gc import collect
 from adafruit_datetime import datetime
 from adafruit_matrixportal.matrixportal import MatrixPortal
+from displayio import OnDiskBitmap
+from displayio import TileGrid
+from json import loads
+from supervisor import reload
 
 # Get wifi details & environment variables from secrets.py
 try:
@@ -13,7 +15,7 @@ except ImportError:
     raise
 
 # Init HW
-matrixportal = MatrixPortal(status_neopixel=board.NEOPIXEL, debug=True, color_order="RBG")
+matrixportal = MatrixPortal(status_neopixel=NEOPIXEL, debug=True, color_order="RBG")
 
 # return info for a provided train schedule obj
 def get_train_info(train_schedule):
@@ -32,8 +34,8 @@ def make_train_text(train_info):
 
 def display_bmp(bmp_path, pos_x, pos_y):
     try:
-        bmp = displayio.OnDiskBitmap(bmp_path)
-        tg = displayio.TileGrid(
+        bmp = OnDiskBitmap(bmp_path)
+        tg = TileGrid(
             bmp,
             pixel_shader=bmp.pixel_shader,
             x=pos_x,
@@ -101,7 +103,7 @@ try:
             # get next train info
             try:
                 schedule_response = matrixportal.fetch(request_url)
-                schedule = json.loads(schedule_response)
+                schedule = loads(schedule_response)
                 next_train_index = 0
 
                 if not get_train_info( schedule[0] )['dep'] > 0:
@@ -109,6 +111,7 @@ try:
 
                 train1 = get_train_info( schedule[next_train_index] )
                 train2 = get_train_info( schedule[next_train_index + 1] )
+                collect()
 
                 # clear Connecting text and stop initial check
                 matrixportal.set_text(" ", 0)
@@ -121,6 +124,7 @@ try:
                 # update text
                 matrixportal.set_text(make_train_text(train1), 1)
                 matrixportal.set_text(make_train_text(train2), 2)
+                collect()
 
             except RuntimeError as e:
                 print("Some error occured, retrying! -", e)
@@ -130,4 +134,4 @@ except Exception as e:
     print(error_text, e)
     matrixportal.set_text(error_text, 0)
     matrixportal.scroll_text(0.03)
-    supervisor.reload()
+    reload()
