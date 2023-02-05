@@ -1,6 +1,6 @@
 from board import NEOPIXEL
 from gc import collect
-from adafruit_datetime import datetime
+from time import sleep
 from adafruit_matrixportal.matrixportal import MatrixPortal
 from displayio import Group
 from displayio import OnDiskBitmap
@@ -23,10 +23,11 @@ except ImportError:
 api_url = secrets['mta_api_url']
 station = secrets['mta_station']
 direction = secrets['mta_train_direction']
+debug = secrets['debug']
 request_url = "http://{}/api/schedule/{}/{}".format(api_url, station, direction)
 
 # Init HW
-matrixportal = MatrixPortal(status_neopixel=NEOPIXEL, debug=False, color_order="RBG")
+matrixportal = MatrixPortal(status_neopixel=NEOPIXEL, debug=debug, color_order="RBG")
 
 # graphics buffer for sign bitmaps
 sign_group = Group()
@@ -98,6 +99,8 @@ def display_bmp(buffer, bmp_path, pos_x, pos_y):
 def get_bmp_for_route(train_info):
     return "gfx/{}.bmp".format(train_info['route'])
 
+def get_exception_name(e):
+    return str(e.__class__.__name__)
 
 # -----------------------------------------------------
 # MAIN PROGRAM LOOP
@@ -111,54 +114,47 @@ try:
     while True:
         if not started:
             matrixportal.scroll_text(0.03)
-        # query once every 30s (and on first run)
-        currenttime = datetime.now()
-        if lastruntime:
-            deltatime = currenttime - lastruntime
 
-        if (not lastruntime) or (deltatime.total_seconds() > 30):
-            try:
-                lastruntime = datetime.now()
-            except RuntimeError as e:
-                print("Some error occured, retrying! -", e)
-                continue
+        # get next train info
+        try:
+            schedule_response = matrixportal.fetch(request_url)
+            schedule = loads(schedule_response)
+            next_train_index = 0
 
-            # get next train info
-            try:
-                schedule_response = matrixportal.fetch(request_url)
-                schedule = loads(schedule_response)
-                next_train_index = 0
+            if not get_train_info( schedule[0] )['dep'] > 0:
+                next_train_index = 1
 
-                if not get_train_info( schedule[0] )['dep'] > 0:
-                    next_train_index = 1
+            train1 = get_train_info( schedule[next_train_index] )
+            train2 = get_train_info( schedule[next_train_index + 1] )
+            collect()
 
-                train1 = get_train_info( schedule[next_train_index] )
-                train2 = get_train_info( schedule[next_train_index + 1] )
-                collect()
+            # clear Connecting text and stop initial check
+            if not started:
+                matrixportal.set_text("", 0)
+                started = True
 
-                # clear Connecting text and stop initial check
-                if not started:
-                    matrixportal.set_text("", 0)
-                    started = True
+            # update graphics
+            clear_graphics()
+            display_bmp( sign_group, get_bmp_for_route(train1), 3, 0 )
+            display_bmp( sign_group, get_bmp_for_route(train2), 3, 16 )
+            collect()
 
-                # update graphics
-                clear_graphics()
-                display_bmp( sign_group, get_bmp_for_route(train1), 3, 0 )
-                display_bmp( sign_group, get_bmp_for_route(train2), 3, 16 )
-                collect()
+            # update text
+            matrixportal.set_text(make_train_text(train1), 1)
+            matrixportal.set_text(make_train_text(train2), 2)
+            collect()
 
-                # update text
-                matrixportal.set_text(make_train_text(train1), 1)
-                matrixportal.set_text(make_train_text(train2), 2)
-                collect()
+        except RuntimeError as e:
+            print("Some error occured, retrying! -", e)
+            continue
 
-            except RuntimeError as e:
-                print("Some error occured, retrying! -", e)
-                continue
+        sleep(30)
 
 except Exception as e:
-    error_text = "Error: restarting panel..."
-    print(error_text, e)
+    exc = get_exception_name(e)
+    error_text = "{}: restarting panel...".format(exc)
+    print(error_text)
+    print("{}: {}".format(exc, e))
     matrixportal.set_text(error_text, 0)
     matrixportal.scroll_text(0.03)
     reload()
