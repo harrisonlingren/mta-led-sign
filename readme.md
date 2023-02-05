@@ -112,6 +112,16 @@ $ curl <SERVER_IP>:8080/api/station
 
 #### 2. Configure and test the UI application
 
+##### Auto configuration
+
+To quickly generate a `secrets.py` config file, you can use the `/config` page included in the API server.
+
+Example: `http://localhost:8080/config`.
+
+Fill out the fields, click "Save to config", and simply download the file to your sign over USB.
+
+##### Manual configuration
+
 Update the UI configuration file. Use your subway station's `stop_id` you wrote down for the `mta_station`. Supply a direction, "N", or "S", and the IP + Port or domain name of your API server from step 1:
 
 ```Python

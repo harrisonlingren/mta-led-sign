@@ -141,6 +141,7 @@ const removeFromTree = (parent, childIdToRemove) => {
 
 // Register the routes & start the server
 app.use('/api', router)
+app.use('/config', express.static('config_page'))
 app.listen(port, (err) => {
   if (err) return console.log(`Something bad happened: ${err}`)
   console.log(`Node.js server listening on ${port}`)
