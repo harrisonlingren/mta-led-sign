@@ -29,7 +29,8 @@ function makeConfig(e) {
     'timezone' : 'America/New_York',
     'mta_station': '${station}',
     'mta_train_direction': '${direction}',
-    'mta_api_url': '${provider}'
+    'mta_api_url': '${provider}',
+    'debug': False
 }`;
 
     let outputFile = new Blob([outputContent], {type: outputHeaders});
@@ -61,7 +62,7 @@ function showResults(search) {
     res.innerHTML = `${resultsList}`;
 }
 
-document.getElementById("provider").defaultValue = document.URL.replace('/config/', '/api');
+document.getElementById("provider").defaultValue = window.location.host;
 
 const stationIdRegex = "^[01234567ABCDEFGJLMNQRWZ]{3}$"
 fetch("/api/station")
