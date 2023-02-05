@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: mtaledapi
+    env: node
+    repo: https://github.com/harrisonlingren/mta-led-sign # optional
+    envVars:
+      - key: API_KEY
+        sync: false
+    rootDir: Server
+    buildCommand: npm install
+    startCommand: npm start

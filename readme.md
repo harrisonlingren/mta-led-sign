@@ -68,7 +68,13 @@ This project is split in two parts:
 1. Sign up for an account and generate an API key from the MTA Real-Time Data Feeds website: https://api.mta.info
 2. Set up any dependencies on the host machine you'll use for the API. A Raspberry Pi at home works great, or you could also set up on a cloud VPS or managed service that can run node.js.
 
-#### Installing
+#### Deploy a hosted version
+
+You can easily spin up your own instance of this project on a service like render.com. Try it now with the button below:
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/harrisonlingren/mta-led-sign)
+
+#### Local installation
 
 Install dependencies:
 
