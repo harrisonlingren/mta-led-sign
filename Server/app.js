@@ -82,11 +82,15 @@ router.route('/schedule/:id/:trainName/:direction')
       const direction = req.params.direction
       if (direction == "N" || direction == "S") {
         const result = await mta.schedule(req.params.id, feed)
-        let filteredResult = removeFromTree(result.schedule[req.params.id], req.params.trainName)
-        filteredResult[direction].forEach(arrivalInfo => {
-          arrivalInfo.relativeTime = timeToRelative(arrivalInfo.arrivalTime)
-        })
-        res.send(filteredResult[direction])
+        if (result.schedule) {
+          let filteredResult = removeFromTree(result.schedule[req.params.id], req.params.trainName)
+          filteredResult[direction].forEach(arrivalInfo => {
+            arrivalInfo.relativeTime = timeToRelative(arrivalInfo.arrivalTime)
+          })
+          res.send(filteredResult[direction])
+        } else {
+          res.send([]);  // send empty list if no schedule
+        }
       } else {
         res.sendStatus(400);
       }
@@ -105,10 +109,14 @@ router.route('/schedule/:id/:direction')
       const direction = req.params.direction
       if (direction == "N" || direction == "S") {
         const result = await mta.schedule(req.params.id, feed)
-        result.schedule[req.params.id][direction].forEach(arrivalInfo => {
-          arrivalInfo.relativeTime = timeToRelative(arrivalInfo.arrivalTime)
-        })
-        res.send(result.schedule[req.params.id][direction])
+        if (result.schedule) {
+          result.schedule[req.params.id][direction].forEach(arrivalInfo => {
+            arrivalInfo.relativeTime = timeToRelative(arrivalInfo.arrivalTime)
+          })
+          res.send(result.schedule[req.params.id][direction])
+        } else {
+          res.send([]);  // send empty list if no schedule
+        }
       } else {
         res.sendStatus(400);
       }
