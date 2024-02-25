@@ -80,7 +80,7 @@ Install dependencies:
 
 ```bash
 # For the API server
-$ cd nyc-train-sign/Server
+$ cd mta-led-sign/Server
 $ npm install
 ```
 
@@ -100,7 +100,7 @@ After configuring the Server applicaton, you should test it by running it manual
 
 ```bash
 # Run the server manually
-$ cd nyc-train-sign/Server
+$ cd mta-led-sign/Server
 $ sudo node app.js
   > Node.js server listening on 8080
 ```
