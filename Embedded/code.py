@@ -148,6 +148,13 @@ try:
             print("Some error occured, retrying! -", e)
             continue
 
+        except IndexError as e:
+            matrixportal.set_text("No", 1)
+            matrixportal.set_text("trains", 2)
+            sleep(30)
+            clear_graphics()
+            continue
+
         sleep(30)
 
 except Exception as e:
