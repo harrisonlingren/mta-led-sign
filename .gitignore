@@ -63,3 +63,5 @@ typings/
 
 # misc macOS
 .DS_Store
+
+.vscode/
