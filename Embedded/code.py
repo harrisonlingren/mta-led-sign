@@ -122,7 +122,9 @@ try:
             next_train_index = 0
 
             if not get_train_info( schedule[0] )['dep'] > 0:
-                next_train_index = 1
+                while get_train_info( schedule[0] )['dep'] < 0:
+                    schedule.pop(0)
+                    continue
 
             train1 = get_train_info( schedule[next_train_index] )
             train2 = get_train_info( schedule[next_train_index + 1] )
