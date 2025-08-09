@@ -141,7 +141,7 @@ router.route('/schedule/:stationId/:lines/:direction')
 const timeToRelative = (time) => {
   const now = new Date().valueOf()
   const diff = (time * 1000) - now
-  const minsDiff = Math.floor((diff % 3.6e6) / 6e4);
+  const minsDiff = Math.floor(diff / 6e4);
   return minsDiff
 }
 
