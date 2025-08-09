@@ -13,7 +13,10 @@ function makeConfig(e) {
     let provider = document.getElementById("provider").value;
     let ssid = document.getElementById("ssid").value;
     let pass = document.getElementById("pass").value;
-    let station = document.getElementById("station").value;
+    let stationDropdown = document.getElementById("station");
+    let selectedStation = stationDropdown.options[stationDropdown.selectedIndex];
+    let station = selectedStation.value;
+    let lines = selectedStation.dataset.lines;
     let direction = document.getElementById("direction").value;
 
     if (!provider || !ssid || !pass || !station || !direction) {
@@ -32,6 +35,10 @@ function makeConfig(e) {
     'mta_api_url': '${provider}',
     'debug': False
 }`;
+
+    if (lines) {
+        outputContent += `\nsecrets['mta_train_lines'] = '${lines}'`;
+    }
 
     let outputFile = new Blob([outputContent], {type: outputHeaders});
     let link = document.createElement("a");
@@ -57,7 +64,7 @@ function showResults(search) {
     res.innerHTML = '';
     let resultsList = '';
     searchStations(search).forEach(result => {
-        resultsList += `<option value="${result.id}">${result.name} (${result.line})</option>`;
+        resultsList += `<option value="${result.id}" data-lines="${result.line}">${result.name} (${result.line})</option>`;
     });
     res.innerHTML = `${resultsList}`;
 }

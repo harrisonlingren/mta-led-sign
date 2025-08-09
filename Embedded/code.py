@@ -23,8 +23,13 @@ except ImportError:
 api_url = secrets['mta_api_url']
 station = secrets['mta_station']
 direction = secrets['mta_train_direction']
+lines = secrets.get('mta_train_lines', None)
 debug = secrets['debug']
-request_url = "http://{}/api/schedule/{}/{}".format(api_url, station, direction)
+
+if lines:
+    request_url = "http://{}/api/schedule/{}/{}/{}".format(api_url, station, lines, direction)
+else:
+    request_url = "http://{}/api/schedule/{}/{}".format(api_url, station, direction)
 
 # Init HW
 matrixportal = MatrixPortal(status_neopixel=NEOPIXEL, debug=debug, color_order="RBG")

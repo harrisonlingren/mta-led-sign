@@ -126,6 +126,45 @@ router.route('/schedule/:id/:direction')
     }
   })
 
+router.route('/schedule/:stationId/:lines/:direction')
+  .get(async (req, res) => {
+    try {
+      const stationId = req.params.stationId;
+      const lines = req.params.lines.split(',');
+      const direction = req.params.direction;
+
+      if (direction !== "N" && direction !== "S") {
+        return res.sendStatus(400);
+      }
+
+      let combinedSchedule = [];
+      const feedsToFetch = new Set(lines.map(line => getFeedForLine(line)).filter(feed => feed !== undefined));
+
+      for (const feed of feedsToFetch) {
+        const result = await mta.schedule(stationId, feed);
+        if (result.schedule && result.schedule[stationId] && result.schedule[stationId][direction]) {
+          result.schedule[stationId][direction].forEach(arrivalInfo => {
+            if (lines.includes(arrivalInfo.routeId)) {
+              arrivalInfo.relativeTime = timeToRelative(arrivalInfo.arrivalTime);
+              combinedSchedule.push(arrivalInfo);
+            }
+          });
+        }
+      }
+
+      combinedSchedule.sort((a, b) => a.arrivalTime - b.arrivalTime);
+
+      if (combinedSchedule.length > 0) {
+        res.send(combinedSchedule);
+      } else {
+        res.send([]); // send empty list if no schedule
+      }
+    } catch (error) {
+      console.log(error);
+      res.sendStatus(502);
+    }
+  });
+
 const timeToRelative = (time) => {
   const now = new Date().valueOf()
   const diff = (time * 1000) - now
