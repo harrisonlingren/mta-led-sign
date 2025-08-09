@@ -1,84 +1,95 @@
-stations = [];
-stationMap = {
-    "A": "ACE", "B": "BDFM", "C": "ACE",
-    "D": "BDFM", "E": "ACE", "F": "BDFM",
-    "G": "G", "J": "JZ", "L": "L",
-    "M": "BDFM", "N": "NQRW", "Q": "NQRW",
-    "R": "NQRW", "W": "NQRW", "1": "123",
-    "2": "123", "3": "123", "4": "456",
-    "5": "456", "6": "456", "7": "7"
-}
+let stations = [];
 
-function makeConfig(e) {
-    let provider = document.getElementById("provider").value;
-    let ssid = document.getElementById("ssid").value;
-    let pass = document.getElementById("pass").value;
-    let stationDropdown = document.getElementById("station");
-    let selectedStation = stationDropdown.options[stationDropdown.selectedIndex];
-    let station = selectedStation.value;
-    let lines = selectedStation.dataset.lines;
-    let direction = document.getElementById("direction").value;
+function makeConfig() {
+    const provider = document.getElementById("provider").value;
+    const ssid = document.getElementById("ssid").value;
+    const pass = document.getElementById("pass").value;
+    const direction = document.getElementById("direction").value;
 
-    if (!provider || !ssid || !pass || !station || !direction) {
+    const selectedStations = Array.from(document.querySelectorAll('input[name="station"]:checked'));
+    if (!provider || !ssid || !pass || selectedStations.length === 0 || !direction) {
         console.error("Missing some values in form, can't save config");
         document.getElementById("warning").hidden = false;
         return false;
     }
 
-    let outputHeaders = "text/x-python"
+    let stationIds = [];
+    let selectedLines = [];
+
+    selectedStations.forEach(stationCheckbox => {
+        const stationId = stationCheckbox.value;
+        stationIds.push(stationId);
+        const lines = Array.from(document.querySelectorAll(`input[name="line_${stationId}"]:checked`))
+                           .map(input => input.value);
+        selectedLines = selectedLines.concat(lines);
+    });
+    
+    // Remove duplicate lines that might be selected from different station complexes
+    selectedLines = [...new Set(selectedLines)];
+
+    if (selectedLines.length === 0) {
+        console.error("No lines selected for the station(s)");
+        document.getElementById("warning").hidden = false;
+        return false;
+    }
+
     let outputContent = `secrets = {
     'ssid': '${ssid}',
     'password': '${pass}',
     'timezone' : 'America/New_York',
-    'mta_station': '${station}',
+    'mta_station': '${stationIds.join(',')}',
     'mta_train_direction': '${direction}',
     'mta_api_url': '${provider}',
-    'debug': False
+    'debug': False,
+    'mta_train_lines': '${selectedLines.join(',')}'
 }`;
 
-    if (lines) {
-        outputContent += `\nsecrets['mta_train_lines'] = '${lines}'`;
-    }
-
-    let outputFile = new Blob([outputContent], {type: outputHeaders});
-    let link = document.createElement("a");
+    const outputFile = new Blob([outputContent], {type: "text/x-python"});
+    const link = document.createElement("a");
     link.href = URL.createObjectURL(outputFile);
     link.download = "secrets.py";
     link.click();
     URL.revokeObjectURL(link.href);
-
-    return false;
 }
 
 function searchStations(input) {
     if (input === '') {
         return [];
     }
-
-    const regex = new RegExp(input.toLowerCase());
-    return stations.filter((station) => station.name.toLowerCase().match(regex));
+    const regex = new RegExp(input.toLowerCase(), 'i');
+    return stations.filter(station => station.name.toLowerCase().match(regex));
 }
 
 function showResults(search) {
-    res = document.getElementById("results");
+    const res = document.getElementById("results");
     res.innerHTML = '';
-    let resultsList = '';
-    searchStations(search).forEach(result => {
-        resultsList += `<option value="${result.id}" data-lines="${result.line}">${result.name} (${result.line})</option>`;
+    const resultsList = searchStations(search);
+    
+    resultsList.forEach(result => {
+        const stationId = result.stop_ids.join(',');
+        let stationDiv = document.createElement('div');
+        stationDiv.innerHTML = `
+            <input type="checkbox" id="station_${stationId}" name="station" value="${stationId}">
+            <label for="station_${stationId}">${result.name} (${result.lines.join(', ')})</label>
+        `;
+        
+        let linesDiv = document.createElement('div');
+        linesDiv.style.marginLeft = "20px";
+        result.lines.forEach(line => {
+            linesDiv.innerHTML += `
+                <input type="checkbox" id="line_${stationId}_${line}" name="line_${stationId}" value="${line}">
+                <label for="line_${stationId}_${line}">${line}</label>
+            `;
+        });
+        stationDiv.appendChild(linesDiv);
+        res.appendChild(stationDiv);
     });
-    res.innerHTML = `${resultsList}`;
 }
 
 document.getElementById("provider").defaultValue = window.location.host;
 
-const stationIdRegex = "^[01234567ABCDEFGJLMNQRWZ]{3}$"
 fetch("/api/station")
-    .then((response) => response.json())
-    .then((stations) => {
-        return Object.values(stations).filter(station => station['stop_id'].match(stationIdRegex));
-    })
-    .then((stations) => Object.values(stations).map((station) => (
-        { 'id': station['stop_id'], 'name': station['stop_name'], 'line': stationMap[station['stop_id'][0]] }
-    )))
-    .then((stationList) => { stations = stationList; });
-
+    .then(response => response.json())
+    .then(stationList => {
+        stations = stationList;
+    });

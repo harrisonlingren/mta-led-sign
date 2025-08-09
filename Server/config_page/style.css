@@ -38,6 +38,16 @@ ol, ul {
     border: 2px solid #fefefe;
     border-radius: 4px;
     padding: 1em;
+    text-align: left;
+    margin: auto;
+}
+
+#results div {
+    width: 80%;
+}
+
+#results input {
+    width: auto;
 }
 
 .form input {

@@ -41,11 +41,56 @@ router.route('/status/:id')
     res.send(filteredResult)
   })
 
-router.route('/station')
-  .get(async (req, res ) => {
-    const result = await mta.stop()
-    res.send(result)
-  })
+  router.route('/station')
+  .get(async (req, res) => {
+    const result = await mta.stop();
+    const stations = Object.values(result);
+    
+    const stationComplexes = [];
+    const processedStations = new Set();
+
+    stations.forEach(station => {
+      if (processedStations.has(station.stop_id) || station.location_type !== '1') {
+        return;
+      }
+
+      const similarStations = stations.filter(s => {
+        const latDiff = Math.abs(parseFloat(s.stop_lat) - parseFloat(station.stop_lat));
+        const lonDiff = Math.abs(parseFloat(s.stop_lon) - parseFloat(station.stop_lon));
+        return latDiff < 0.001 && lonDiff < 0.001 && s.location_type === '1';
+      });
+
+      const stopIds = similarStations.map(s => s.stop_id);
+      const lines = new Set();
+
+      similarStations.forEach(s => {
+        processedStations.add(s.stop_id);
+
+        const firstChar = s.stop_id[0];
+        if (feeds[firstChar]) {
+            lines.add(firstChar);
+        }
+
+        const children = stations.filter(child => child.parent_station === s.stop_id);
+        children.forEach(child => {
+            const childFirstChar = child.stop_id[0];
+            if (feeds[childFirstChar]) {
+                lines.add(childFirstChar);
+            }
+        });
+      });
+
+      stationComplexes.push({
+        name: station.stop_name,
+        stop_ids: stopIds,
+        lines: Array.from(lines),
+        lat: station.stop_lat,
+        lon: station.stop_lon
+      });
+    });
+    
+    res.send(stationComplexes);
+  });
 
 router.route('/station/:id')
 	.get(async (req, res ) => {
@@ -102,7 +147,7 @@ router.route('/schedule/:id/:direction')
 router.route('/schedule/:stationId/:lines/:direction')
   .get(async (req, res) => {
     try {
-      const stationId = req.params.stationId;
+      const stationIds = req.params.stationId.split(',');
       const lines = req.params.lines.split(',');
       const direction = req.params.direction;
 
@@ -112,16 +157,18 @@ router.route('/schedule/:stationId/:lines/:direction')
 
       let combinedSchedule = [];
       const feedsToFetch = new Set(lines.map(line => getFeedForLine(line)).filter(feed => feed !== undefined));
-
-      for (const feed of feedsToFetch) {
-        const result = await mta.schedule(stationId, feed);
-        if (result.schedule && result.schedule[stationId] && result.schedule[stationId][direction]) {
-          result.schedule[stationId][direction].forEach(arrivalInfo => {
-            if (lines.includes(arrivalInfo.routeId)) {
-              arrivalInfo.relativeTime = timeToRelative(arrivalInfo.arrivalTime);
-              combinedSchedule.push(arrivalInfo);
-            }
-          });
+      
+      for (const stationId of stationIds) {
+        for (const feed of feedsToFetch) {
+          const result = await mta.schedule(stationId, feed);
+          if (result.schedule && result.schedule[stationId] && result.schedule[stationId][direction]) {
+            result.schedule[stationId][direction].forEach(arrivalInfo => {
+              if (lines.includes(arrivalInfo.routeId)) {
+                arrivalInfo.relativeTime = timeToRelative(arrivalInfo.arrivalTime);
+                combinedSchedule.push(arrivalInfo);
+              }
+            });
+          }
         }
       }
 
