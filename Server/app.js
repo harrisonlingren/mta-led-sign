@@ -74,33 +74,6 @@ router.route('/schedule/:id')
     }
   })
 
-
-router.route('/schedule/:id/:trainName/:direction')
-  .get(async (req, res ) => {
-    try {
-      const feed = getFeedForLine(req.params.trainName)
-      const direction = req.params.direction
-      if (direction == "N" || direction == "S") {
-        const result = await mta.schedule(req.params.id, feed)
-        if (result.schedule) {
-          let filteredResult = removeFromTree(result.schedule[req.params.id], req.params.trainName)
-          filteredResult[direction].forEach(arrivalInfo => {
-            arrivalInfo.relativeTime = timeToRelative(arrivalInfo.arrivalTime)
-          })
-          res.send(filteredResult[direction])
-        } else {
-          res.send([]);  // send empty list if no schedule
-        }
-      } else {
-        res.sendStatus(400);
-      }
-      
-    } catch (error) {
-      console.log(error);
-      res.sendStatus(502);
-    }
-  })
-
 router.route('/schedule/:id/:direction')
   .get(async (req, res ) => {
     try {
@@ -171,45 +144,6 @@ const timeToRelative = (time) => {
   const minsDiff = Math.floor((diff % 3.6e6) / 6e4);
   return minsDiff
 }
-
-router.route('/schedule/:stationId/:lines/:direction')
-  .get(async (req, res) => {
-    try {
-      const stationId = req.params.stationId;
-      const lines = req.params.lines.split(',');
-      const direction = req.params.direction;
-
-      if (direction !== "N" && direction !== "S") {
-        return res.sendStatus(400);
-      }
-
-      let combinedSchedule = [];
-      const feedsToFetch = new Set(lines.map(line => getFeedForLine(line)).filter(feed => feed !== undefined));
-
-      for (const feed of feedsToFetch) {
-        const result = await mta.schedule(stationId, feed);
-        if (result.schedule && result.schedule[stationId] && result.schedule[stationId][direction]) {
-          result.schedule[stationId][direction].forEach(arrivalInfo => {
-            if (lines.includes(arrivalInfo.routeId)) {
-              arrivalInfo.relativeTime = timeToRelative(arrivalInfo.arrivalTime);
-              combinedSchedule.push(arrivalInfo);
-            }
-          });
-        }
-      }
-
-      combinedSchedule.sort((a, b) => a.arrivalTime - b.arrivalTime);
-
-      if (combinedSchedule.length > 0) {
-        res.send(combinedSchedule);
-      } else {
-        res.send([]); // send empty list if no schedule
-      }
-    } catch (error) {
-      console.log(error);
-      res.sendStatus(502);
-    }
-  });
 
 // Register the routes & start the server
 app.use('/api', router)
