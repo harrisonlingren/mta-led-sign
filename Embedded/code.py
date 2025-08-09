@@ -108,7 +108,8 @@ def get_exception_name(e):
 
 matrixportal.set_text("Connecting to: {}...".format(secrets['ssid']), 0)
 
-lastruntime = None
+last_train1 = None
+last_train2 = None
 started = False
 try:
     while True:
@@ -121,29 +122,41 @@ try:
             schedule = loads(schedule_response)
             next_train_index = 0
 
-            if not get_train_info( schedule[0] )['dep'] > 0:
-                while get_train_info( schedule[0] )['dep'] < 0:
-                    schedule.pop(0)
-                    continue
+            # find first train arriving in the future
+            while len(schedule) > 0 and get_train_info(schedule[0])['dep'] < 0:
+                schedule.pop(0)
 
-            train1 = get_train_info( schedule[next_train_index] )
-            train2 = get_train_info( schedule[next_train_index + 1] )
-            collect()
+            # if no trains are left, display error and retry
+            if len(schedule) < 2:
+                matrixportal.set_text("No", 1)
+                matrixportal.set_text("trains", 2)
+                clear_graphics()
+                sleep(30)
+                continue
+
+            train1 = get_train_info(schedule[next_train_index])
+            train2 = get_train_info(schedule[next_train_index + 1])
 
             # clear Connecting text and stop initial check
             if not started:
                 matrixportal.set_text("", 0)
                 started = True
 
-            # update graphics
-            clear_graphics()
-            display_bmp( sign_group, get_bmp_for_route(train1), 3, 0 )
-            display_bmp( sign_group, get_bmp_for_route(train2), 3, 16 )
-            collect()
+            # update display only if train info has changed
+            if train1 != last_train1 or train2 != last_train2:
+                # update graphics
+                clear_graphics()
+                display_bmp(sign_group, get_bmp_for_route(train1), 3, 0)
+                display_bmp(sign_group, get_bmp_for_route(train2), 3, 16)
 
-            # update text
-            matrixportal.set_text(make_train_text(train1), 1)
-            matrixportal.set_text(make_train_text(train2), 2)
+                # update text
+                matrixportal.set_text(make_train_text(train1), 1)
+                matrixportal.set_text(make_train_text(train2), 2)
+
+                # update last train info
+                last_train1 = train1
+                last_train2 = train2
+
             collect()
 
         except RuntimeError as e:
@@ -153,8 +166,8 @@ try:
         except IndexError as e:
             matrixportal.set_text("No", 1)
             matrixportal.set_text("trains", 2)
-            sleep(30)
             clear_graphics()
+            sleep(30)
             continue
 
         sleep(30)
