@@ -172,19 +172,44 @@ const timeToRelative = (time) => {
   return minsDiff
 }
 
-const removeFromTree = (parent, childIdToRemove) => {
-  if (parent.N) {
-  parent.N = parent.N
-      .filter(function(child){ return child.routeId == childIdToRemove})
-      .map(function(child){ return removeFromTree(child, childIdToRemove)});
-  }
-  if (parent.S) {
-    parent.S = parent.S
-        .filter(function(child){ return child.routeId == childIdToRemove})
-        .map(function(child){ return removeFromTree(child, childIdToRemove)});
-  }
-  return parent;
-}
+router.route('/schedule/:stationId/:lines/:direction')
+  .get(async (req, res) => {
+    try {
+      const stationId = req.params.stationId;
+      const lines = req.params.lines.split(',');
+      const direction = req.params.direction;
+
+      if (direction !== "N" && direction !== "S") {
+        return res.sendStatus(400);
+      }
+
+      let combinedSchedule = [];
+      const feedsToFetch = new Set(lines.map(line => getFeedForLine(line)).filter(feed => feed !== undefined));
+
+      for (const feed of feedsToFetch) {
+        const result = await mta.schedule(stationId, feed);
+        if (result.schedule && result.schedule[stationId] && result.schedule[stationId][direction]) {
+          result.schedule[stationId][direction].forEach(arrivalInfo => {
+            if (lines.includes(arrivalInfo.routeId)) {
+              arrivalInfo.relativeTime = timeToRelative(arrivalInfo.arrivalTime);
+              combinedSchedule.push(arrivalInfo);
+            }
+          });
+        }
+      }
+
+      combinedSchedule.sort((a, b) => a.arrivalTime - b.arrivalTime);
+
+      if (combinedSchedule.length > 0) {
+        res.send(combinedSchedule);
+      } else {
+        res.send([]); // send empty list if no schedule
+      }
+    } catch (error) {
+      console.log(error);
+      res.sendStatus(502);
+    }
+  });
 
 // Register the routes & start the server
 app.use('/api', router)
